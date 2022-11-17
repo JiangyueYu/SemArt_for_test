@@ -33,7 +33,7 @@ def get_parser():
     parser.add_argument('--freeComment', default=True, type=bool)
     parser.add_argument('--resume', default='', type=str)
     parser.add_argument('--start_epoch', default=0, help='Initial epoch', type=int)
-    parser.add_argument('--nepochs', default=120, help='Number of epochs', type=int)
+    parser.add_argument('--nepochs', default=5, help='Number of epochs', type=int)
 
     # CML Model params
     parser.add_argument('--margin', default=0.1, help='Loss margin', type=float)
@@ -41,7 +41,8 @@ def get_parser():
     parser.add_argument('--patience', default=1, type=int)
 
     # Test
-    parser.add_argument('--model_path', default='Models/CML/model_e024_v-10.000.pth.tar', type=str)
+    #parser.add_argument('--model_path', default='Models/CML/model_e024_v-10.000.pth.tar', type=str)
+    parser.add_argument('--model_path', default='Models/CML/model_e029_v-8.000.pth.tar', type=str)
     parser.add_argument('--path_results', default='Results/CML/', type=str)
     parser.add_argument('--no_cuda', action='store_true')
 

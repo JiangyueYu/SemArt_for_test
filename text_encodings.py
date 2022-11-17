@@ -12,7 +12,7 @@ def get_text_encoding(fileText, N, field):
     print("Creating text encodings... ")
 
     # Load training sentences
-    df = pd.read_csv(fileText, delimiter='\t')
+    df = pd.read_csv(fileText, delimiter='\t', encoding='cp1252')
 
     # Lower-case comments and convert to list of strings
     comments = []

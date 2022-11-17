@@ -32,13 +32,13 @@ class SemArtDataset(data.Dataset):
         elif self.set == 'test':
             textfile = args_dict.csvtest
             self.mismtch = 0
-        df = pd.read_csv(textfile, delimiter='\t')
+        df = pd.read_csv(textfile, delimiter='\t', encoding='cp1252')
         self.imageurls = list(df['IMAGE_FILE'])
         self.comment_map = get_mapped_text(df, w2i, field='DESCRIPTION')
         self.titles_map = get_mapped_text(df, w2i_tit, field='TITLE')
 
         # Parameters
-        self.numpairs = len(df) / (1 - self.mismtch)
+        self.numpairs = int(len(df) / (1 - self.mismtch))
         self.comw2i = w2i
         self.titw2i = w2i_tit
         # self.titw2i = dict([(w, i) for i, w in enumerate(titvocab)])
@@ -111,17 +111,17 @@ class SemArtDataset(data.Dataset):
 
         # Encode idx_text comment as a tfidf vector --> comment
         comm_map = self.comment_map[idx_text]
-        comm_onehot = np.zeros((len(self.comw2i)), dtype=np.uint8)
+        comm_onehot = np.zeros((len(self.comw2i)), dtype=np.uint8).reshape(1,-1)
         for word in comm_map:
-            comm_onehot[word] += 1
+            comm_onehot[0, word] += 1
         comm_tfidf = self.tfidf_coms.transform(comm_onehot)
         comment = torch.FloatTensor(comm_tfidf.toarray())
 
         # Encode idx_text title as a tfidf vector --> title
         tit_map = self.titles_map[idx_text]
-        tit_onehot = np.zeros((len(self.titw2i)), dtype=np.uint8)
+        tit_onehot = np.zeros((len(self.titw2i)), dtype=np.uint8).reshape(1,-1)
         for word in tit_map:
-            tit_onehot[word] += 1
+            tit_onehot[0, word] += 1
         tit_tfidf = self.tfidf_tits.transform(tit_onehot)
         title = torch.FloatTensor(tit_tfidf.toarray())
 

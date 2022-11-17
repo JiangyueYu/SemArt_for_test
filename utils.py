@@ -7,14 +7,14 @@ def save_obj(obj, filename):
     f = open(filename, 'wb')
     pickle.dump(obj, f)
     f.close()
-    print "Saved object to %s." % filename
+    print("Saved object to %s." % filename)
 
 
 def load_obj(filename):
     f = open(filename, 'rb')
     obj = pickle.load(f)
     f.close()
-    print "Load object from %s." % filename
+    print("Load object from %s." % filename)
     return obj
 
 
@@ -50,4 +50,4 @@ class VisdomLinePlotter(object):
                 ylabel=var_name
             ))
         else:
-            self.viz.updateTrace(X=np.array([x]), Y=np.array([y]), env=self.env, win=self.plots[var_name], name=split_name)
+            self.viz.line(X=np.array([x]), Y=np.array([y]), env=self.env, win=self.plots[var_name], name=split_name)

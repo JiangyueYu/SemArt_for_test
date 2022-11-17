@@ -14,6 +14,7 @@ from params import get_parser
 from model import CML_Model
 from dataloader import SemArtDataset
 from text_encodings import get_text_encoding
+from importlib import reload
 import utils
 
 
@@ -33,26 +34,28 @@ def trainEpoch(train_loader, model, criterion, optimizer, epoch):
     # switch to train mode
     model.train()
 
+    device = torch.device('mps')
+
     # Train in mini-batches
     for batch_idx, (input, target) in enumerate(train_loader):
 
         # Inputs to Variable type
         input_var = list()
         for j in range(len(input)):
-            input_var.append(torch.autograd.Variable(input[j]).cuda())
+            input_var.append(torch.autograd.Variable(input[j]).to(device))
 
         # Targets to Variable type
         target_var = list()
         for j in range(len(target)):
-            target[j] = target[j].cuda(async=True)
-            target_var.append(torch.autograd.Variable(target[j]))
+            # target[j] = target[j]
+            target_var.append(torch.autograd.Variable(target[j]).to(device))
 
         # Output of the model
         output = model(input_var[0], input_var[1], input_var[2])
 
         # Compute loss
         train_loss = criterion(output[0], output[1], target_var[0].float())
-        cos_losses.update(train_loss.data[0], input[0].size(0))
+        cos_losses.update(train_loss.item(), input[0].size(0))
 
         # Backpropagate loss and update weights
         optimizer.zero_grad()
@@ -77,26 +80,28 @@ def valEpoch(args_dict, val_loader, model, criterion, epoch):
     # switch to evaluation mode
     model.eval()
 
+    device = torch.device('mps')
+
     # Mini-batches
     for batch_idx, (input, target) in enumerate(val_loader):
 
         # Inputs to Variable type
         input_var = list()
         for j in range(len(input)):
-            input_var.append(torch.autograd.Variable(input[j], volatile=True).cuda())
+            input_var.append(torch.autograd.Variable(input[j], volatile=True).to(device))
 
         # Targets to Variable type
         target_var = list()
         for j in range(len(target)):
-            target[j] = target[j].cuda(async=True)
-            target_var.append(torch.autograd.Variable(target[j], volatile=True))
+            # target[j] = target[j]
+            target_var.append(torch.autograd.Variable(target[j], volatile=True).to(device))
 
         # Output of the model
         output = model(input_var[0], input_var[1], input_var[2])
 
         # Compute loss
         train_loss = criterion(output[0], output[1], target_var[0].float())
-        cos_losses.update(train_loss.data[0], input[0].size(0))
+        cos_losses.update(train_loss.item(), input[0].size(0))
 
         # Save embeddings to compute rankings later
         if batch_idx==0:
@@ -187,10 +192,11 @@ def trainProcess(args_dict):
     # Load CML model
     model = CML_Model(args_dict, len(vocab_comment), len(vocab_title))
     if args_dict.use_gpu:
-        model.cuda()
+        device = torch.device('mps')
+        model.to(device)
 
     # Loss and optimizer
-    cosine_loss = nn.CosineEmbeddingLoss(margin=args_dict.margin).cuda()
+    cosine_loss = nn.CosineEmbeddingLoss(margin=args_dict.margin).to(device)
 
     # Create different parameter groups to optimize different parts of the model separately
     vision_params = list(map(id, model.resnet.parameters()))
@@ -282,8 +288,8 @@ def trainProcess(args_dict):
             args_dict.freeComment = not (args_dict.freeVision)
             optimizer.param_groups[0]['lr'] = args_dict.lr * args_dict.freeComment
             optimizer.param_groups[1]['lr'] = args_dict.lr * args_dict.freeVision
-            print 'Initial base params lr: %f' % optimizer.param_groups[0]['lr']
-            print 'Initial vision lr: %f' % optimizer.param_groups[1]['lr']
+            print('Initial base params lr: %f' % optimizer.param_groups[0]['lr'])
+            print('Initial vision lr: %f' % optimizer.param_groups[1]['lr'])
             args_dict.patience = 3
             valtrack = 0
 
@@ -300,14 +306,14 @@ def trainProcess(args_dict):
                 'freeVision': args_dict.freeVision,
                 'curr_val': lossval,
             })
-        print '** Validation: %f (best) - %d (valtrack)' % (best_val, valtrack)
+        print('** Validation: %f (best) - %d (valtrack)' % (best_val, valtrack))
 
 
 if __name__ == "__main__":
 
     # Set the correct system encoding to read the csv files
     reload(sys)
-    sys.setdefaultencoding('Cp1252')
+    # sys.setdefaultencoding('Cp1252')
 
     # Load parameters
     parser = get_parser()
@@ -315,8 +321,8 @@ if __name__ == "__main__":
 
     # Set seed for reproducibility
     torch.manual_seed(args_dict.seed)
-    if args_dict.use_gpu:
-        torch.cuda.manual_seed(args_dict.seed)
+    # if args_dict.use_gpu:
+        # torch.cuda.manual_seed(args_dict.seed)
 
     # Plots
     global plotter

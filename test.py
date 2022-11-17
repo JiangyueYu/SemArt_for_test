@@ -12,6 +12,7 @@ from torchvision import transforms
 from model import CML_Model
 from dataloader import SemArtDataset
 from params import get_parser
+from importlib import reload
 import utils
 
 
@@ -75,11 +76,11 @@ def measure_test_acc(img_emb, text_emb, text_ind):
     for i in recall_i2t.keys():
         recall_i2t[i] = recall_i2t[i] / N
 
-    print "Median t2i", np.median(med_rank_t2i)
-    print "Recall t2i", recall_t2i
+    print("Median t2i", np.median(med_rank_t2i))
+    print("Recall t2i", recall_t2i)
 
-    print "Median i2t", np.median(med_rank_i2t)
-    print "Recall i2t", recall_i2t
+    print("Median i2t", np.median(med_rank_i2t))
+    print("Recall i2t", recall_i2t)
 
 
 def extract_test_features(args_dict):
@@ -90,12 +91,13 @@ def extract_test_features(args_dict):
 
     # Load CML model
     model = CML_Model(args_dict, len(vocab_comment), len(vocab_title))
-    if args_dict.use_gpu:
-        model.cuda()
+    #if args_dict.use_gpu:
+    #    model.cuda()
 
     # Load best model
     print("=> loading checkpoint '{}'".format(args_dict.model_path))
-    checkpoint = torch.load(args_dict.model_path)
+    #checkpoint = torch.load(args_dict.model_path)
+    checkpoint = torch.load(args_dict.model_path, map_location=torch.device('cpu'))
     args_dict.start_epoch = checkpoint['epoch']
     model.load_state_dict(checkpoint['state_dict'])
     print("=> loaded checkpoint '{}' (epoch {})"
@@ -126,12 +128,13 @@ def extract_test_features(args_dict):
         # Inputs to Variable type
         input_var = list()
         for j in range(len(input)):
-            input_var.append(torch.autograd.Variable(input[j], volatile=True).cuda())
+            #input_var.append(torch.autograd.Variable(input[j], volatile=True).cuda())
+            input_var.append(torch.autograd.Variable(input[j], volatile=True))
 
         # Targets to Variable type
         target_var = list()
         for j in range(len(target)):
-            target[j] = target[j].cuda(async=True)
+            #target[j] = target[j].cuda(async=True)
             target_var.append(torch.autograd.Variable(target[j], volatile=True))
 
         # Output of the model
@@ -158,7 +161,7 @@ def extract_test_features(args_dict):
 if __name__ == "__main__":
 
     reload(sys)
-    sys.setdefaultencoding('Cp1252')
+    #sys.setdefaultencoding('Cp1252')
 
     # Set the correct system encoding to read the csv files
     parser = get_parser()
